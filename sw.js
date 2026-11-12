@@ -3,7 +3,7 @@
    continua com o arquivo velho. O mp3 não entra no pré-cache: é guardado
    depois do primeiro play (ficheiro completo) e, offline, pedidos Range
    são atendidos com 206 a partir dessa cópia completa. */
-const CACHE = 'lmdm-pwa-v7';
+const CACHE = 'lmdm-pwa-v8';
 const PRECACHE = [
   './',
   './index.html',
