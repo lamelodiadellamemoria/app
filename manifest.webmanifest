@@ -1,0 +1,33 @@
+{
+  "name": "La Melodia della Memoria",
+  "short_name": "La Melodia",
+  "description": "I tuoi 15 minuti al giorno. Benessere Ogni Giorno.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0818",
+  "theme_color": "#0c0818",
+  "lang": "it",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icons-marca/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons-marca/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons-marca/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

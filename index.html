@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>La Melodia della Memoria</title>
+  <meta name="description" content="I tuoi 15 minuti al giorno. La Melodia della Memoria, Benessere Ogni Giorno.">
+  <meta name="theme-color" content="#0c0818">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="La Melodia">
+  <link rel="icon" href="icons-marca/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" href="icons-marca/favicon-32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="icons-marca/favicon-16.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="icons-marca/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/app.css">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <section id="vista-accesso" class="vista schermo schermo--accesso" aria-label="Accesso">
+      <header class="marca">
+        <img
+          src="img/logo-cervello.webp"
+          srcset="img/logo-cervello.webp 1x, img/logo-cervello-2x.webp 2x"
+          width="56"
+          height="56"
+          alt="">
+        <p class="marca-nome">Benessere Ogni Giorno</p>
+      </header>
+      <h1 class="titolo">Entra con l'email usata per l'acquisto</h1>
+      <p class="lead">Non ti serve una password. Usa l'indirizzo con cui hai fatto l'acquisto.</p>
+      <form id="form-accesso" novalidate>
+        <div class="campo">
+          <label for="campo-email">Email</label>
+          <input
+            id="campo-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+            placeholder="La tua email">
+        </div>
+        <p class="errore" id="errore-accesso" role="alert"></p>
+        <button type="submit" class="btn btn-oro" id="btn-entra">Entra</button>
+      </form>
+
+      <!-- Copywriter: rivedere i testi della schermata del codice. -->
+      <div id="vista-codice" hidden>
+        <h2 class="titolo titolo--schermo" id="titolo-codice">Inserisci il codice</h2>
+        <p class="lead" id="lead-codice">Ti abbiamo inviato un codice a 6 cifre all'email usata per l'acquisto.</p>
+        <form id="form-codice" novalidate>
+          <div class="campo campo-codice">
+            <label for="campo-codice">Codice</label>
+            <input
+              id="campo-codice"
+              name="codice"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              pattern="[0-9]*"
+              enterkeyhint="done"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+              aria-describedby="errore-codice">
+          </div>
+          <p class="errore" id="errore-codice" role="alert"></p>
+          <button type="submit" class="btn btn-oro" id="btn-verifica-codice">Conferma</button>
+        </form>
+        <button type="button" class="btn btn-ghost" id="btn-reinvia" disabled>Reinvia il codice</button>
+        <p class="lead lead--piccolo" id="timer-reinvia"></p>
+      </div>
+    </section>
+
+    <section id="vista-app" class="vista" aria-label="App">
+
+      <div class="schermo schermo--sessioni" data-schermo="sessioni">
+        <p class="sessioni-kicker">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M10.2 2.8L4.8 8l5.4 5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Le tue sessioni
+        </p>
+        <div class="disco-wrap">
+          <div class="disco" aria-hidden="true">
+            <div class="disco-anello"></div>
+            <div class="disco-logo">
+              <img
+                class="disco-logo-giro"
+                id="logo-giro"
+                src="img/logo-disco.webp"
+                width="192"
+                height="192"
+                alt=""
+                decoding="async">
+            </div>
+          </div>
+        </div>
+        <h1 class="player-titolo">La Melodia della Memoria</h1>
+        <p class="player-durata" id="durata-etichetta">15:00</p>
+        <div
+          class="barra"
+          id="barra"
+          role="slider"
+          tabindex="0"
+          aria-label="Avanzamento"
+          aria-valuemin="0"
+          aria-valuemax="900"
+          aria-valuenow="0">
+          <div class="barra-track">
+            <div class="barra-fill" id="barra-fill"></div>
+            <div class="barra-thumb" id="barra-thumb"></div>
+          </div>
+          <div class="barra-tempi">
+            <span id="tempo-corrente">00:00</span>
+            <span id="tempo-rimanente">-15:00</span>
+          </div>
+        </div>
+        <p class="avvertenza">Sconsigliato in caso di epilessia o disturbi dell'udito; ascoltare a volume basso</p>
+        <div class="play-wrap">
+          <button type="button" class="btn-play" id="btn-play" aria-label="Riproduci">
+            <svg id="icona-play" class="icona-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M8 5.2v13.6L19 12 8 5.2z" fill="currentColor"/>
+            </svg>
+            <svg id="icona-pausa" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden>
+              <rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/>
+              <rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="schermo schermo--guida" data-schermo="guida" hidden>
+        <div class="guida-apertura">
+        <h1 class="titolo titolo--schermo">Come usarla</h1>
+        <div class="card-cuffie">
+          <svg class="icona" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 3a8 8 0 00-8 8v6a3 3 0 003 3h1.2v-7H6V11a6 6 0 1112 0v2h-2.2v7H17a3 3 0 003-3v-6a8 8 0 00-8-8z" fill="currentColor"/>
+          </svg>
+          <p>Metti le cuffie, quelle che hai già vanno benissimo.</p>
+        </div>
+        <ol class="passi">
+          <li><span class="passo-n">1</span><span>Una volta al giorno, possibilmente alla stessa ora.</span></li>
+          <li><span class="passo-n">2</span><span>Ti siedi, metti le cuffie, tieni il volume basso e premi play.</span></li>
+          <li><span class="passo-n">3</span><span>Dopo 15 minuti hai finito.</span></li>
+        </ol>
+        <div class="blocco">
+          <h2 class="sottotitolo-oro">E se salto un giorno?</h2>
+          <p>Nessun problema: riprendi il giorno dopo. Nel calendario segni i giorni di ascolto. L'importante è tornare all'abitudine.</p>
+        </div>
+        <p class="avvertenza avvertenza--sinistra">Sconsigliato in caso di epilessia o disturbi dell'udito; ascoltare a volume basso. Le informazioni non sostituiscono il parere del medico.</p>
+
+        </div>
+        <div class="guida-piu">
+          <h2>Ti diamo il benvenuto</h2>
+          <p>Hai tra le mani la guida della Melodia della Memoria.</p>
+          <p>Sono poche pagine. Ti spiegano dove sederti, a che volume ascoltare, a che ora conviene e cosa fare se salti un giorno.</p>
+          <p>Non devi meditare. Non devi ripetere frasi. Non devi studiare niente.</p>
+          <p>Ti servono solo tre cose:</p>
+          <ul>
+            <li>la traccia della Melodia della Memoria, 15 minuti;</li>
+            <li>un paio di cuffie, quelle che hai già vanno benissimo;</li>
+            <li>un posto comodo dove sederti.</li>
+          </ul>
+
+          <h3>In breve</h3>
+          <ol>
+            <li>Ti siedi.</li>
+            <li>Metti le cuffie e tieni il volume basso.</li>
+            <li>Premi play e ascolti.</li>
+            <li>Dopo 15 minuti la voce ti dice che hai finito.</li>
+            <li>Se vuoi, scrivi una X sul calendario.</li>
+          </ol>
+          <p>Tutto qui. Nelle prossime pagine trovi ogni passo con calma.</p>
+
+          <h2>Cosa senti nei 15 minuti</h2>
+          <p>La traccia dura 15 minuti esatti ed è sempre uguale. È fatta di tre parti.</p>
+          <p><strong>1. La voce guida, all'inizio.</strong><br>Una voce in italiano ti dice cosa fare: metterti le cuffie, sederti in una posizione comoda, tenere il volume basso, chiudere gli occhi se ti va, respirare con calma. Poi ti dice: «Ora parte la musica».</p>
+          <p><strong>2. La musica, con dentro il ritmo.</strong><br>Una musica calma, senza parole e senza sorprese. Dentro la musica c'è un ritmo regolare, a 40 impulsi al secondo. Lo senti appena. È normale: è fatto così.</p>
+          <p><strong>3. La voce di chiusura, alla fine.</strong><br>La voce torna e ti dice che hai finito. Ti invita a toglierti le cuffie con calma, a tornare alla tua giornata e a segnare il giorno sul calendario.</p>
+          <p>Durante l'ascolto non devi fare niente. Ascolti e basta.</p>
+
+          <h2>Le cuffie e il volume</h2>
+          <h3>Usa le cuffie</h3>
+          <p>La traccia è fatta per essere ascoltata con le cuffie. Una parte del ritmo arriva in modo un po' diverso all'orecchio destro e a quello sinistro: senza cuffie, questa parte si perde.</p>
+          <ul>
+            <li>Vanno bene le cuffie che hai già: con il filo o senza filo, grandi o piccole, anche gli auricolari del telefono.</li>
+            <li>Usa tutte e due le cuffie, una per orecchio.</li>
+            <li>Se hai cuffie senza filo, controlla che siano cariche prima di cominciare.</li>
+          </ul>
+          <h3>Tieni il volume basso</h3>
+          <p>Il volume giusto è basso. Devi sentire la voce in modo chiaro, senza fastidio.</p>
+          <p>Un modo semplice: premi play e regola il volume mentre parla la voce guida, all'inizio. Quando la senti bene e non ti dà fastidio, lascialo così per tutti i 15 minuti.</p>
+          <p>Se un giorno il suono ti sembra forte, abbassalo. Il volume più alto non serve.</p>
+
+          <h2>Dove e come sederti</h2>
+          <p>Scegli un posto tranquillo della casa. La poltrona, il divano, la sedia della cucina: va bene quello che usi già.</p>
+          <ul>
+            <li>Siediti con la schiena appoggiata.</li>
+            <li>Lascia andare le spalle.</li>
+            <li>Tieni i piedi a terra, se ti viene comodo.</li>
+            <li>Se ti va, chiudi gli occhi. Se preferisci tenerli aperti, va bene lo stesso.</li>
+          </ul>
+          <p>Prima di cominciare, metti il telefono in modalità «Non disturbare». Così nessuna telefonata e nessun messaggio ti interrompe a metà.</p>
+          <p>Se in casa ci sono altre persone, puoi dire: «Mi prendo 15 minuti». Bastano.</p>
+
+          <h2>A che ora conviene</h2>
+          <p>Ascolta la traccia una volta al giorno, possibilmente sempre alla stessa ora.</p>
+          <p>Perché alla stessa ora? Perché un'abitudine si tiene meglio quando la attacchi a una cosa che fai già.</p>
+          <h3>Il rituale del mattino</h3>
+          <p>Il caffè lo prendi tutti i giorni. Allora le cuffie stanno lì, accanto alla moka.</p>
+          <ol>
+            <li>Prepari il caffè.</li>
+            <li>Ti siedi.</li>
+            <li>Metti le cuffie e premi play.</li>
+            <li>Dopo 15 minuti hai finito, e la giornata comincia con calma.</li>
+          </ol>
+          <h3>Se il mattino non fa per te</h3>
+          <p>Va bene anche un altro momento: per esempio sul divano dopo pranzo. Conta una cosa sola: che sia lo stesso momento ogni giorno.</p>
+          <p>La routine è un ascolto al giorno. Se ti va, puoi riascoltarla quando vuoi: la traccia è tua, senza limiti.</p>
+
+          <h2>Telefono, tablet o computer</h2>
+          <p>La ascolti dal telefono, dal tablet o dal computer. Ti serve la connessione a internet. A casa, se puoi, usa il Wi-Fi.</p>
+          <h3>Come entri</h3>
+          <ol>
+            <li>Apri l'email di Hotmart con l'accesso. Di solito arriva pochi minuti dopo la conferma del pagamento.</li>
+            <li>Premi il pulsante dell'email per accedere al prodotto. La prima volta crei una password, oppure entri con un codice che ricevi via email.</li>
+            <li>Apri la lezione «Ascolta qui: La Melodia della Memoria, 15 minuti». In alto c'è il player. Sotto il player trovi la guida e il calendario da scaricare.</li>
+          </ol>
+          <h3>Dal telefono o dal tablet</h3>
+          <p>Metti le cuffie, poi premi il tasto ▶ del player.</p>
+          <h3>Dal computer</h3>
+          <p>Collega le cuffie al computer prima di premere ▶, così il suono non esce dalle casse.</p>
+          <h3>Un consiglio</h3>
+          <p>Conserva l'email di Hotmart con l'accesso. Se un giorno cambi telefono o computer, da lì rientri con la tua email e ritrovi tutto.</p>
+          <p>Se non trovi l'email, guarda nella cartella della posta indesiderata (spam). Se non c'è, scrivici: trovi l'indirizzo nell'ultima pagina.</p>
+
+          <h2>Se salti un giorno</h2>
+          <p>Non succede niente di grave. Riprendi il giorno dopo, alla tua solita ora.</p>
+          <p>Non devi recuperare. Non serve ascoltarla due volte il giorno dopo. Ricomincia semplicemente dal punto in cui eri.</p>
+          <p>Nel calendario segni i giorni in cui hai ascoltato. L'importante è tornare all'abitudine.</p>
+          <h3>Per non perdere l'abitudine</h3>
+          <ul>
+            <li><strong>Stessa ora, stesso posto.</strong> Meno decisioni devi prendere, più è facile.</li>
+            <li><strong>Le cuffie sempre allo stesso posto.</strong> Accanto alla moka, sul tavolino, vicino alla poltrona. Le vedi, e ti ricordi.</li>
+            <li><strong>Una sveglia sul telefono.</strong> Puoi metterne una alla tua ora, con il nome «La Melodia della Memoria».</li>
+            <li><strong>Il calendario a vista.</strong> Se lo stampi, attaccalo al frigorifero o accanto al posto dove ascolti.</li>
+            <li><strong>Una X dopo l'ascolto, se vuoi.</strong> Non devi scrivere niente: è solo un aiuto. Sul calendario stampato, oppure su un foglio se lo apri sul telefono. È un gesto piccolo, ma vedere il calendario che si riempie ti aiuta a non mollare.</li>
+          </ul>
+
+          <h2>Cosa aspettarti</h2>
+          <p>La Melodia della Memoria è un'abitudine di cura: 15 minuti al giorno solo per te, a casa tua, con le tue cuffie.</p>
+          <p>Ognuno è diverso. Per questo ti chiediamo una cosa sola: ascoltarla ogni giorno per le 4 settimane del calendario. Poi decidi tu.</p>
+          <p>E intanto guarda le tue giornate: le telefonate, il pranzo della domenica, le storie ai nipoti, la lista della spesa.</p>
+          <h3>La ricerca, in breve</h3>
+          <ul>
+            <li>Al MIT, nel 2019, un suono a 40 impulsi al secondo, ascoltato un'ora al giorno per una settimana, ha migliorato alcuni test di memoria in topi di laboratorio. (Martorell et al., Cell, 2019)</li>
+            <li>Nel 2022 uno studio sulle persone ha provato luce e suono a 40 impulsi su 15 pazienti con demenza lieve: il trattamento si è dimostrato sicuro e ha dato un primo segnale positivo in un test di memoria. (Chan et al., PLoS One, 2022)</li>
+          </ul>
+          <p>Da questi studi è partita la nostra idea: un ritmo preciso, ascoltato ogni giorno, come abitudine. Gli studi hanno usato tempi e modi diversi dalla traccia. La Melodia della Memoria non è una medicina: è un'abitudine.</p>
+
+          <h2>Avvertenze importanti</h2>
+          <ul>
+            <li>La Melodia della Memoria non è un farmaco né un dispositivo medico. Non serve a diagnosticare, trattare, curare o prevenire alcuna malattia.</li>
+            <li>Non sostituisce il medico. Se hai dubbi sulla tua salute o sulla tua memoria, parlane con il tuo medico.</li>
+            <li>Se prendi farmaci o integratori, continua come ti ha indicato il medico. La traccia si aggiunge, non toglie niente.</li>
+            <li>È sconsigliata in caso di epilessia o disturbi dell'udito.</li>
+            <li>Ascoltala sempre a volume basso.</li>
+            <li>Non ascoltarla mentre guidi, mentre vai in bicicletta, mentre cammini per strada o mentre fai qualcosa che richiede attenzione.</li>
+            <li>Se durante l'ascolto senti fastidio, togli le cuffie e interrompi.</li>
+          </ul>
+
+          <h2>Assistenza e garanzia</h2>
+          <h3>Ti serve aiuto?</h3>
+          <p>Scrivici a <a href="mailto:contatto@lamelodiadellamemoria.com">contatto@lamelodiadellamemoria.com</a>, dall'indirizzo email che hai usato per l'acquisto. Ti rispondiamo.</p>
+          <h3>Soddisfatti o rimborsati per 30 giorni</h3>
+          <p>Ascolta La Melodia della Memoria ogni giorno, segui il calendario e decidi con calma. Non importa quante volte l'avrai ascoltata: se entro 30 giorni dall'acquisto non fa per te, chiedi il rimborso e ti torna ogni centesimo. Il rischio è tutto nostro.</p>
+          <p><strong>Come si chiede il rimborso:</strong></p>
+          <p>Vai su refund.hotmart.com, inserisci il codice dell'acquisto (comincia con HP e lo trovi nell'email di Hotmart con l'accesso) e l'email che hai usato per pagare; poi ti arriva un codice di verifica da inserire.</p>
+          <p>Hai bisogno di una mano? Scrivi a <a href="mailto:contatto@lamelodiadellamemoria.com">contatto@lamelodiadellamemoria.com</a> e ti spieghiamo come richiedere il rimborso su Hotmart. Ti torna ogni centesimo, sullo stesso metodo di pagamento.</p>
+          <h3>Quando l'avrai provata, scrivici</h3>
+          <p>Ci fa piacere saperlo: raccontaci com'è andata a <a href="mailto:contatto@lamelodiadellamemoria.com">contatto@lamelodiadellamemoria.com</a>.</p>
+          <p>La Melodia della Memoria · Benessere Ogni Giorno<br>© 2026 Benessere Ogni Giorno. Contenuto per uso personale: non è consentito rivendere, copiare o diffondere la traccia, la guida o il calendario.</p>
+        </div>
+      </div>
+
+      <div class="schermo" data-schermo="calendario" hidden>
+        <h1 class="titolo titolo--schermo">Il tuo calendario</h1>
+        <p class="cal-lead">Ventotto caselle, una al giorno: ogni sera ne segni una.</p>
+        <div class="cal-meta">
+          <span>4 settimane</span>
+          <span class="cal-meta-destra" id="cal-conta">0 giorni ascoltati</span>
+        </div>
+        <div id="cal-griglia"></div>
+        <div class="cal-azione">
+          <button type="button" class="btn btn-oro" id="btn-segna">Segna come fatto</button>
+        </div>
+      </div>
+
+      <nav class="tabbar" aria-label="Navigazione">
+        <button type="button" class="tab is-on" data-tab="sessioni" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M10 8.8v6.4L16.2 12 10 8.8z" fill="currentColor"/>
+          </svg>
+          Sessioni
+        </button>
+        <button type="button" class="tab" data-tab="guida">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 4a7 7 0 00-7 7v5a2.5 2.5 0 002.5 2.5H9v-6H7.2V11a4.8 4.8 0 019.6 0v1.5H15v6h1.5A2.5 2.5 0 0019 16v-5a7 7 0 00-7-7z" fill="currentColor"/>
+          </svg>
+          Come usarla
+        </button>
+        <button type="button" class="tab" data-tab="calendario">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="4" y="5.5" width="16" height="14" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M4 9.5h16M8 4v3.5M16 4v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Calendario
+        </button>
+      </nav>
+    </section>
+
+    <div class="foglio" id="foglio-oggi" hidden>
+      <div class="foglio-card" role="dialog" aria-labelledby="foglio-titolo" aria-modal="true">
+        <h2 id="foglio-titolo">Segna il giorno</h2>
+        <p id="foglio-testo">Hai finito i 15 minuti. Vuoi segnare il giorno di oggi?</p>
+        <button type="button" class="btn btn-oro" id="btn-foglio-segna">Segna come fatto</button>
+        <button type="button" class="btn btn-ghost" id="btn-foglio-chiudi">Non ora</button>
+      </div>
+    </div>
+  </div>
+
+  <audio
+    id="traccia"
+    preload="none"
+    playsinline
+    webkit-playsinline
+    controlslist="nodownload noplaybackrate noremoteplayback"
+    ></audio>
+
+  <script src="js/acesso.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
