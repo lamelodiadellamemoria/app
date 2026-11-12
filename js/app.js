@@ -7,6 +7,8 @@
   var STORAGE_CAL = 'lmdm_pwa_v1_calendario';
   var STORAGE_EMAIL = 'lmdm_pwa_v1_email';
   var STORAGE_TOKEN = 'lmdm_pwa_v1_token';
+  var STORAGE_VERIFICATO = 'lmdm_pwa_v1_verificato_il';
+  var ACCESSO_VALIDO_MS = 30 * 24 * 60 * 60 * 1000;
   var CALENDAR_DAYS = 28;
   var SETT_LABELS = [
     'Settimana 1',
@@ -81,7 +83,8 @@
     codice_errato: "Il codice non è corretto. Prova di nuovo.",
     codice_scaduto: "Il codice è scaduto. Richiedine uno nuovo.",
     nessun_acquisto: "Non troviamo un acquisto con questa email.",
-    troppi_tentativi: "Hai provato troppe volte. Riprova tra poco.",
+    troppi_tentativi: "Hai provato troppe volte, per sicurezza facciamo una pausa. Riprova tra un poco, o richiedi un codice nuovo.",
+    link_scaduto: "Questo link è scaduto. Inserisci l'email usata per l'acquisto e ti inviamo un codice nuovo.",
     reinvia_attesa: "Puoi reinviare il codice tra {n} s.",
     lead_codice: "Ti abbiamo inviato un codice a 6 cifre all'email usata per l'acquisto.",
     lead_reale: "Ti inviamo un codice a 6 cifre all'email usata per l'acquisto."
@@ -112,8 +115,39 @@
     try {
       localStorage.removeItem(STORAGE_EMAIL);
       localStorage.removeItem(STORAGE_TOKEN);
+      localStorage.removeItem(STORAGE_VERIFICATO);
     } catch (e) {}
     emailInCorso = '';
+  }
+  function verificatoIlSalvato() {
+    try { return localStorage.getItem(STORAGE_VERIFICATO) || ''; } catch (e) { return ''; }
+  }
+  function salvaVerificatoIl(iso) {
+    try {
+      if (iso) localStorage.setItem(STORAGE_VERIFICATO, String(iso));
+      else localStorage.removeItem(STORAGE_VERIFICATO);
+    } catch (e) {}
+  }
+  function dentroTrentaGiorni() {
+    var raw = verificatoIlSalvato();
+    if (!raw) return false;
+    var t = Date.parse(raw);
+    if (!Number.isFinite(t)) return false;
+    return (Date.now() - t) <= ACCESSO_VALIDO_MS;
+  }
+  function limparHashAccesso() {
+    try {
+      var limpa = location.pathname + location.search;
+      if (location.hash) history.replaceState(null, '', limpa);
+    } catch (e) {}
+  }
+  function valorHashAccesso() {
+    var hash = '';
+    try { hash = String(location.hash || ''); } catch (e) {}
+    if (hash.indexOf('#accesso=') !== 0) return null;
+    var valor = hash.slice('#accesso='.length);
+    try { valor = decodeURIComponent(valor); } catch (e) {}
+    return valor;
   }
   function mostraAccesso() {
     vistaAccesso.classList.add('is-on');
@@ -163,28 +197,93 @@
   }
   function entraNellApp(email, token) {
     fermaTimerReinvia();
-    salvaEmail(email);
+    if (email) salvaEmail(email);
     if (token) salvaToken(token);
+    if (!verificatoIlSalvato()) salvaVerificatoIl(new Date().toISOString());
     mostraApp();
     vaiTab('sessioni');
   }
   function sessioneValida() {
-    if (!emailSalvata()) return false;
-    if (cfgAccesso().mock) return true;
-    return !!tokenSalvato();
+    if (cfgAccesso().mock) return !!emailSalvata();
+    if (!tokenSalvato()) return false;
+    return dentroTrentaGiorni();
   }
-  function controllaStatoOnline() {
-    var token = tokenSalvato();
-    if (!token || cfgAccesso().mock) return;
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-    if (typeof verificareStato !== 'function') return;
-    verificareStato(token).then(function (r) {
+  function applicareStato(token) {
+    if (typeof verificareStato !== 'function') {
+      if (dentroTrentaGiorni()) mostraApp();
+      else { mostraAccesso(); mostraFormEmail(); }
+      return Promise.resolve();
+    }
+    return verificareStato(token).then(function (r) {
       if (r && r.revoked) {
         pulisciSessione();
         mostraAccesso();
         mostraFormEmail();
+        return;
       }
+      if (r && r.ok && !r.offline) {
+        salvaVerificatoIl(r.verificato_il || new Date().toISOString());
+        mostraApp();
+        return;
+      }
+      /* Erro de rede ou offline: nunca derruba o acesso.
+         Sem checagem recente (30 dias), volta so a tela de entrada, sem apagar o token. */
+      if (dentroTrentaGiorni() || (r && r.offline && dentroTrentaGiorni())) {
+        mostraApp();
+        return;
+      }
+      if (r && (r.errore === 'rete' || r.offline) && tokenSalvato() && dentroTrentaGiorni()) {
+        mostraApp();
+        return;
+      }
+      if (r && r.errore === 'rete' && tokenSalvato() && !verificatoIlSalvato()) {
+        /* Link magico recem-aberto, stato falhou a rede: nao derruba. */
+        mostraApp();
+        return;
+      }
+      mostraAccesso();
+      mostraFormEmail();
     });
+  }
+  function avvioAccesso() {
+    if (cfgAccesso().mock) {
+      if (sessioneValida()) mostraApp();
+      else { mostraAccesso(); mostraFormEmail(); }
+      return;
+    }
+    var hashVal = valorHashAccesso();
+    if (hashVal !== null) limparHashAccesso();
+    if (hashVal === 'scaduto') {
+      mostraAccesso();
+      mostraFormEmail();
+      if (erroreAccesso) erroreAccesso.textContent = accessoErrore('link_scaduto');
+      return;
+    }
+    if (hashVal) {
+      salvaToken(hashVal);
+      var online = true;
+      try { online = navigator.onLine !== false; } catch (e) {}
+      if (!online) {
+        if (dentroTrentaGiorni()) mostraApp();
+        else mostraApp(); /* token recem-chegado do link; rede indisponivel nao derruba */
+        return;
+      }
+      applicareStato(hashVal);
+      return;
+    }
+    if (!tokenSalvato()) {
+      mostraAccesso();
+      mostraFormEmail();
+      return;
+    }
+    var online2 = true;
+    try { online2 = navigator.onLine !== false; } catch (e) {}
+    if (!online2) {
+      if (dentroTrentaGiorni()) mostraApp();
+      else { mostraAccesso(); mostraFormEmail(); }
+      return;
+    }
+    applicareStato(tokenSalvato());
   }
 
   if (!cfgAccesso().mock && leadAccesso) {
@@ -555,11 +654,5 @@
   aggiornaPlayUi();
   durataEtichetta.textContent = fmt(TRACK_DURATION_SECONDS);
 
-  if (sessioneValida()) {
-    mostraApp();
-    controllaStatoOnline();
-  } else {
-    mostraAccesso();
-    mostraFormEmail();
-  }
+  avvioAccesso();
 })();

@@ -2,8 +2,9 @@
    ACESSO_MOCK=true: qualquer e-mail valido libera a entrada (prototipo).
    Quando a flag estiver false, o fluxo real pede um codice di 6 cifre
    all'API (POST /acesso/codigo e POST /acesso/verificar) e guarda o
-   token em lmdm_pwa_v1_token. GET /acesso/stato so roda online e nao
-   bloqueia o uso offline.
+   token em lmdm_pwa_v1_token. GET /acesso/stato so roda online, devolve tambem verificato_il,
+   e nao bloqueia o uso offline. O link do e-mail (#accesso=<token>
+   ou #accesso=scaduto) e tratado no app.js. Um codice novo anula o anterior.
 
    Nenhum dado alem do e-mail (e do codice, no fluxo real) e coletado
    nesta tela. Os testes podem sobrescrever ACESSO_MOCK e API_BASE com
@@ -166,7 +167,11 @@ function verificareStato(token) {
   }).then(function (r) {
     var d = r.data || {};
     if (r.status === 200 && d.ok) {
-      return { ok: true, livelli: d.livelli || [] };
+      return {
+        ok: true,
+        livelli: d.livelli || [],
+        verificato_il: d.verificato_il || new Date().toISOString()
+      };
     }
     if (r.status === 401) {
       return { ok: false, revoked: true, errore: 'revocato' };
